@@ -2,3 +2,10 @@ AGENTS.md
 CLAUDE.md
 docs/
 NOW.md
+node_modules/
+.next/
+.DS_Store
+.env.local
+.now_md.cooldown
+.now_md.lock
+public/local-icons/

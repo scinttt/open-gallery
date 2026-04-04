@@ -1,0 +1,64 @@
+import Link from "next/link";
+import AuthUserButton from "@/components/auth-user-button";
+import ImageStrip from "@/components/image-strip";
+import { getGalleryBySlug } from "@/lib/gallery";
+
+export const dynamic = "force-dynamic";
+
+export default async function GalleryDetailPage({ params }) {
+  const { slug } = await params;
+  const gallery = await getGalleryBySlug(slug);
+
+  if (!gallery) {
+    return (
+      <main className="page-shell detail-page">
+        <div className="missing-state">
+          <p className="eyebrow">Missing Gallery</p>
+          <h1>This set could not be found.</h1>
+          <Link className="back-link" href="/">
+            Return home
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="page-shell detail-page">
+      <div className="topbar">
+        <span className="topbar-mark">Private Library</span>
+        <AuthUserButton />
+      </div>
+      <header className="detail-hero">
+        <div>
+          <Link className="back-link" href="/">
+            Back to covers
+          </Link>
+          <p className="eyebrow">Gallery Detail</p>
+          <h1>{gallery.title}</h1>
+          <p className="detail-description">
+            Single-column scroll view for uninterrupted set browsing. Images are
+            revealed in segments to keep mobile performance stable.
+          </p>
+        </div>
+
+        <dl className="detail-facts">
+          <div>
+            <dt>Images</dt>
+            <dd>{gallery.imageCount}</dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd>{gallery.sourceType}</dd>
+          </div>
+          <div>
+            <dt>Folder</dt>
+            <dd>{gallery.title}</dd>
+          </div>
+        </dl>
+      </header>
+
+      <ImageStrip gallery={gallery} />
+    </main>
+  );
+}
