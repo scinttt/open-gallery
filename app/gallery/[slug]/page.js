@@ -29,36 +29,40 @@ export default async function GalleryDetailPage({ params }) {
         <span className="topbar-mark">Private Library</span>
         <AuthUserButton />
       </div>
-      <header className="detail-hero">
-        <div>
-          <Link className="back-link" href="/">
-            Back to covers
-          </Link>
-          <p className="eyebrow">Gallery Detail</p>
-          <h1>{gallery.title}</h1>
-          <p className="detail-description">
-            Single-column scroll view for uninterrupted set browsing. Images are
-            revealed in segments to keep mobile performance stable.
-          </p>
+      <div className="detail-body">
+        <header className="detail-hero">
+          <div>
+            <Link className="back-link" href="/">
+              Back to covers
+            </Link>
+            <p className="eyebrow">Gallery Detail</p>
+            <h1>{gallery.title}</h1>
+            <p className="detail-description">
+              Single-column scroll view for uninterrupted set browsing. Images are
+              revealed in segments to keep mobile performance stable.
+            </p>
+          </div>
+
+          <dl className="detail-facts">
+            <div>
+              <dt>Images</dt>
+              <dd>{gallery.imageCount}</dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>{gallery.sourceType}</dd>
+            </div>
+            <div>
+              <dt>Folder</dt>
+              <dd>{gallery.title}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <div className="detail-reader">
+          <ImageStrip gallery={gallery} />
         </div>
-
-        <dl className="detail-facts">
-          <div>
-            <dt>Images</dt>
-            <dd>{gallery.imageCount}</dd>
-          </div>
-          <div>
-            <dt>Source</dt>
-            <dd>{gallery.sourceType}</dd>
-          </div>
-          <div>
-            <dt>Folder</dt>
-            <dd>{gallery.title}</dd>
-          </div>
-        </dl>
-      </header>
-
-      <ImageStrip gallery={gallery} />
+      </div>
     </main>
   );
 }

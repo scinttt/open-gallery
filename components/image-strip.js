@@ -36,7 +36,10 @@ export default function ImageStrip({ gallery }) {
   const visibleImages = gallery.images.slice(0, visibleCount);
 
   return (
-    <section className="image-strip" aria-label={`${gallery.title} image strip`}>
+    <section
+      className="image-strip"
+      aria-label={`${gallery.title} image strip`}
+    >
       {visibleImages.map((image, index) => (
         <figure className="image-section" key={image.id}>
           <img
