@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AuthUserButton from "@/components/auth-user-button";
-import { GalleryCard } from "@/components/gallery-card";
+import GalleryGroupManager from "@/components/gallery-group-manager";
 import { getGalleryGroupBySlug } from "@/lib/gallery";
 
 export const dynamic = "force-dynamic";
@@ -62,11 +62,7 @@ export default async function GalleryGroupPage({ params }) {
           </dl>
         </header>
 
-        <section className="gallery-grid" aria-label={`${group.title} galleries`}>
-          {group.galleries.map((gallery) => (
-            <GalleryCard gallery={gallery} key={gallery.slug} />
-          ))}
-        </section>
+        <GalleryGroupManager group={group} />
       </div>
     </main>
   );
