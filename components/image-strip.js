@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const INITIAL_BATCH = 12;
+const INITIAL_BATCH = 5;
 const BATCH_SIZE = 10;
 
 export default function ImageStrip({ gallery }) {
@@ -26,7 +26,7 @@ export default function ImageStrip({ gallery }) {
           );
         }
       },
-      { rootMargin: "1200px 0px" },
+      { rootMargin: "600px 0px" },
     );
 
     observer.observe(target);

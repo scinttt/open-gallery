@@ -2,22 +2,25 @@ import Link from "next/link";
 import AuthUserButton from "@/components/auth-user-button";
 import GalleryGroupManager from "@/components/gallery-group-manager";
 import TopNavigationTabs from "@/components/top-navigation-tabs";
-import { getGalleryGroupBySlug } from "@/lib/gallery";
+import { getArtistBySlug, getArtistGroupBySlug } from "@/lib/gallery";
 
 export const dynamic = "force-dynamic";
 
-export default async function GalleryGroupPage({ params }) {
-  const { groupSlug } = await params;
-  const group = await getGalleryGroupBySlug(groupSlug);
+export default async function ArtistGroupPage({ params }) {
+  const { artistSlug, groupSlug } = await params;
+  const [artist, group] = await Promise.all([
+    getArtistBySlug(artistSlug),
+    getArtistGroupBySlug(artistSlug, groupSlug),
+  ]);
 
-  if (!group) {
+  if (!artist || !group) {
     return (
       <main className="page-shell detail-page">
         <div className="missing-state">
           <p className="eyebrow">Missing Group</p>
           <h1>This group could not be found.</h1>
-          <Link className="back-link" href="/">
-            Return home
+          <Link className="back-link" href="/artists">
+            Return to artists
           </Link>
         </div>
       </main>
@@ -31,19 +34,23 @@ export default async function GalleryGroupPage({ params }) {
         <AuthUserButton />
       </div>
 
-      <TopNavigationTabs activeTab="all" />
+      <TopNavigationTabs activeTab="artists" />
 
       <div className="detail-body">
         <header className="detail-hero">
           <div>
-            <Link className="back-link" href="/">
-              Back to all galleries
+            <Link className="back-link" href={`/artists/${artistSlug}`}>
+              Back to {artist.title}
             </Link>
             <h1>{group.title}</h1>
           </div>
         </header>
 
-        <GalleryGroupManager group={group} />
+        <GalleryGroupManager
+          emptyRedirectHref={`/artists/${artistSlug}`}
+          group={group}
+          note="Use Edit mode when you want to remove a set from this artist."
+        />
       </div>
     </main>
   );

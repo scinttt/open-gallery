@@ -1,5 +1,6 @@
 import AuthUserButton from "@/components/auth-user-button";
 import { GalleryGroupCard } from "@/components/gallery-group-card";
+import TopNavigationTabs from "@/components/top-navigation-tabs";
 import { getGalleryGroups } from "@/lib/gallery";
 
 export const dynamic = "force-dynamic";
@@ -15,14 +16,16 @@ export default async function HomePage() {
         <AuthUserButton />
       </div>
 
+      <TopNavigationTabs activeTab="all" />
+
       <header className="section-heading">
         <div>
-          <p className="eyebrow">Grouped Library</p>
+          <p className="eyebrow">All Galleries</p>
           <h2>Every 10 sets in one block</h2>
         </div>
         <p className="detail-description">
-          {totalSets} sets are now grouped into {groups.length} blocks, so older
-          galleries are easier to reach without endless scrolling.
+          {totalSets} sets from every artist are grouped into {groups.length} blocks,
+          so older galleries stay reachable without endless scrolling.
         </p>
       </header>
 

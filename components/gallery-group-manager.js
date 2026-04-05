@@ -4,7 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GalleryCard } from "@/components/gallery-card";
 
-export default function GalleryGroupManager({ group }) {
+export default function GalleryGroupManager({
+  group,
+  emptyRedirectHref = "/",
+  note = "Use Edit mode when you want to remove a set from this library.",
+  editingNote = "Editing mode is on. Deleting a set moves its folder to macOS Trash.",
+}) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedGallery, setSelectedGallery] = useState(null);
@@ -65,7 +70,7 @@ export default function GalleryGroupManager({ group }) {
       setSelectedGallery(null);
 
       if (remainingCount <= 0) {
-        router.push("/");
+        router.push(emptyRedirectHref);
       }
     } catch (error) {
       setErrorMessage(error.message);
@@ -80,9 +85,7 @@ export default function GalleryGroupManager({ group }) {
     <>
       <div className="gallery-manager-toolbar">
         <p className="gallery-manager-note">
-          {isEditing
-            ? "Editing mode is on. Deleting a set moves its folder to macOS Trash."
-            : "Use Edit mode when you want to remove a set from this library."}
+          {isEditing ? editingNote : note}
         </p>
         <button
           className={`toolbar-button${isEditing ? " toolbar-button-active" : ""}`}

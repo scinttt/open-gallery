@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import sharp from "sharp";
 import { CLERK_ENABLED } from "@/lib/auth-config";
 import { getGalleryImageByIndex } from "@/lib/gallery";
+import { buildCacheKey, getCachedMedia, setCachedMedia } from "@/lib/media-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,51 @@ export async function GET(request, { params }) {
       headers: {
         "Content-Length": String(buffer.byteLength),
         "Content-Type": image.contentType,
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
+  }
+
+  if (mode === "cover") {
+    const cacheKey = buildCacheKey({
+      slug,
+      index: Number(index),
+      mode,
+      width,
+      quality,
+    });
+    const cachedMedia = await getCachedMedia(cacheKey, image.absolutePath);
+
+    if (cachedMedia) {
+      return new Response(cachedMedia, {
+        headers: {
+          "Content-Length": String(cachedMedia.byteLength),
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        },
+      });
+    }
+
+    const transformed = await sharp(image.absolutePath)
+      .rotate()
+      .resize({
+        width,
+        fit: "cover",
+        withoutEnlargement: true,
+      })
+      .jpeg({
+        quality,
+        mozjpeg: true,
+        progressive: true,
+      })
+      .toBuffer();
+
+    await setCachedMedia(cacheKey, transformed);
+
+    return new Response(transformed, {
+      headers: {
+        "Content-Length": String(transformed.byteLength),
+        "Content-Type": "image/jpeg",
         "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
       },
     });
