@@ -5,6 +5,7 @@ export function GalleryCard({
   href = `/gallery/${gallery.slug}`,
   interactive = true,
   overlayAction = null,
+  prefetch = true,
 }) {
   const cardBody = (
     <>
@@ -29,7 +30,11 @@ export function GalleryCard({
 
   return (
     <article className={`gallery-card${interactive ? "" : " gallery-card-static"}`}>
-      {interactive ? <Link href={href}>{cardBody}</Link> : cardBody}
+      {interactive ? (
+        <Link href={href} prefetch={prefetch}>
+          {cardBody}
+        </Link>
+      ) : cardBody}
     </article>
   );
 }

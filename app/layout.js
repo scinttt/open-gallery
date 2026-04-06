@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import GallerySyncListener from "@/components/gallery-sync-listener";
 import { ICON_BASE_PATH, RESOLVED_ICON_VERSION } from "../lib/icon-assets";
 import { CLERK_ENABLED } from "../lib/auth-config";
 import "./globals.css";
@@ -46,7 +47,10 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body>{body}</body>
+      <body>
+        <GallerySyncListener />
+        {body}
+      </body>
     </html>
   );
 }

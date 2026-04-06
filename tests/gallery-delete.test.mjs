@@ -87,6 +87,37 @@ test("moveGalleryToTrashBySlug works for flat gallery structure (sourceRoot == a
   assert.equal(afterDelete.some((gallery) => gallery.slug === alpha.slug), false);
 });
 
+test("moveGalleryToTrashBySlug invalidates cached gallery data across module instances", async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "open-gallery-delete-shared-"));
+  const sourceRoot = path.join(tempRoot, "source");
+  const trashRoot = path.join(tempRoot, "trash");
+  await fs.mkdir(sourceRoot, { recursive: true });
+  await createGalleryDirectory(sourceRoot, "artist-a", "Alpha Set", ["1.jpg", "2.jpg"]);
+  await createGalleryDirectory(sourceRoot, "artist-a", "Beta Set", ["1.jpg"]);
+
+  process.env.GALLERY_SOURCE_DIR = sourceRoot;
+  process.env.GALLERY_TRASH_DIR = trashRoot;
+  process.env.GALLERY_CACHE_TTL_MS = "300000";
+
+  const readerModule = await loadGalleryModule(`reader-${Date.now()}`);
+  const writerModule = await loadGalleryModule(`writer-${Date.now()}`);
+
+  const beforeDelete = await readerModule.getArtistSummaries();
+  assert.equal(beforeDelete.length, 1);
+  assert.equal(beforeDelete[0].galleryCount, 2);
+
+  const alpha = (await writerModule.getGallerySummaries()).find(
+    (gallery) => gallery.title === "Alpha Set",
+  );
+  assert.ok(alpha, "expected Alpha Set to be discoverable before deletion");
+
+  await writerModule.moveGalleryToTrashBySlug(alpha.slug);
+
+  const afterDelete = await readerModule.getArtistSummaries();
+  assert.equal(afterDelete.length, 1);
+  assert.equal(afterDelete[0].galleryCount, 1);
+});
+
 test("isPathInsideDirectory only allows child paths under the configured root", async () => {
   const galleryModule = await loadGalleryModule(`path-${Date.now()}`);
 

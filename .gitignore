@@ -10,3 +10,4 @@ node_modules/
 .now_md.cooldown
 .now_md.lock
 public/local-icons/
+.gallery-invites.json

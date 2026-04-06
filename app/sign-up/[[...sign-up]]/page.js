@@ -1,11 +1,12 @@
-import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SignIn } from "@clerk/nextjs";
+import { headers } from "next/headers";
+import { SignUp } from "@clerk/nextjs";
 import { CLERK_ENABLED } from "@/lib/auth-config";
 
 export const dynamic = "force-dynamic";
 
-export default async function SignInPage() {
+export default async function SignUpPage() {
   if (!CLERK_ENABLED) {
     redirect("/");
   }
@@ -15,9 +16,7 @@ export default async function SignInPage() {
   const host = headerStore.get("x-forwarded-host") || headerStore.get("host");
   const isLocalHost =
     host &&
-    /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(
-      host,
-    );
+    /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
   const protocol = forwardedProto || (isLocalHost ? "http" : "https");
   const origin = host ? `${protocol}://${host}` : "/";
 
@@ -25,16 +24,15 @@ export default async function SignInPage() {
     <main className="page-shell login-page">
       <section className="login-panel clerk-panel">
         <div className="login-copy">
-          <p className="eyebrow">Private Access</p>
-          <h1>Open Gallery stays exposed, but only for signed-in users.</h1>
+          <p className="eyebrow">Create Account</p>
+          <h1>Sign up to access the gallery.</h1>
           <p className="hero-text">
-            Sign in with Clerk to unlock the cover wall, gallery detail pages,
-            and protected media endpoints from your phone or any remote browser.
+            You&rsquo;re one step away. Create your account to start browsing.
           </p>
         </div>
 
         <div className="clerk-card-shell">
-          <SignIn
+          <SignUp
             appearance={{
               elements: {
                 card: "clerk-card",
@@ -49,10 +47,8 @@ export default async function SignInPage() {
             fallbackRedirectUrl={origin}
             forceRedirectUrl={origin}
             routing="path"
-            path="/sign-in"
-            signUpUrl="/invite"
-            signUpForceRedirectUrl={origin}
-            signUpFallbackRedirectUrl={origin}
+            path="/sign-up"
+            signInUrl="/sign-in"
           />
         </div>
       </section>

@@ -31,7 +31,7 @@ export default function ImageStrip({ gallery }) {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [gallery.images.length]);
+  }, [visibleCount, gallery.images.length]);
 
   const visibleImages = gallery.images.slice(0, visibleCount);
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GalleryCard } from "@/components/gallery-card";
+import { markGalleryInvalidated } from "@/lib/gallery-sync";
 
 export default function GalleryGroupManager({
   group,
@@ -68,6 +69,7 @@ export default function GalleryGroupManager({
         current.filter((gallery) => gallery.slug !== selectedGallery.slug),
       );
       setSelectedGallery(null);
+      markGalleryInvalidated();
 
       if (remainingCount <= 0) {
         router.push(emptyRedirectHref);

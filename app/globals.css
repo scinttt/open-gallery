@@ -208,6 +208,118 @@ img {
   color: var(--accent-3);
 }
 
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.invite-error {
+  font-size: 0.85rem;
+  color: #e05a7a;
+  margin: 0;
+}
+
+.admin-invite-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.admin-invite-section {
+  margin-bottom: 32px;
+}
+
+.invite-new-code {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.invite-code-value {
+  font-family: monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.invite-code-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.invite-code-row-used .invite-code-value {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.invite-code-meta {
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+.admin-invite-link {
+  font-size: 0.8rem;
+  opacity: 0.5;
+  color: var(--text);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.admin-invite-link:hover {
+  opacity: 0.8;
+}
+
+.invite-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 0.8rem;
+}
+
+.invite-divider::before,
+.invite-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.invite-signin-button {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 120, 170, 0.25);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.invite-signin-button:hover {
+  background: rgba(239, 120, 170, 0.06);
+}
+
+.invite-signin-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .clerk-card .cl-dividerLine,
 .clerk-card .cl-formFieldLabel,
 .clerk-card .cl-formFieldHintText,

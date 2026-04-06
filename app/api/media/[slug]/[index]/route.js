@@ -32,20 +32,6 @@ export async function GET(request, { params }) {
     : mode === "cover"
       ? 72
       : 82;
-  const fileStat = await stat(image.absolutePath);
-
-  if (fileStat.size < 400_000 && image.contentType !== "image/png") {
-    const buffer = await readFile(image.absolutePath);
-
-    return new Response(buffer, {
-      headers: {
-        "Content-Length": String(buffer.byteLength),
-        "Content-Type": image.contentType,
-        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
-      },
-    });
-  }
-
   if (mode === "cover") {
     const cacheKey = buildCacheKey({
       slug,
@@ -80,7 +66,9 @@ export async function GET(request, { params }) {
       })
       .toBuffer();
 
-    await setCachedMedia(cacheKey, transformed);
+    setCachedMedia(cacheKey, transformed).catch((err) => {
+      console.error("[media-cache] Failed to write cover cache:", err);
+    });
 
     return new Response(transformed, {
       headers: {
@@ -91,11 +79,25 @@ export async function GET(request, { params }) {
     });
   }
 
+  const fileStat = await stat(image.absolutePath);
+
+  if (fileStat.size < 400_000 && image.contentType !== "image/png") {
+    const buffer = await readFile(image.absolutePath);
+
+    return new Response(buffer, {
+      headers: {
+        "Content-Length": String(buffer.byteLength),
+        "Content-Type": image.contentType,
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
+  }
+
   const transformed = await sharp(image.absolutePath)
     .rotate()
     .resize({
       width,
-      fit: mode === "cover" ? "cover" : "inside",
+      fit: "inside",
       withoutEnlargement: true,
     })
     .jpeg({
