@@ -1,77 +1,90 @@
 # open-gallery
 
-`open-gallery` 是一个本地优先的图集浏览器：直接读取你磁盘上的图片文件夹，把它们整理成适合手机和桌面浏览器使用的长图阅读体验。
+English | [简体中文](#简体中文)
 
-项目默认面向“本地自用”场景设计：
+`open-gallery` is a local-first web gallery for image folders on your disk. It scans your gallery root directly, builds grouped cover views, and serves a long-scroll reading experience that works well on both phones and desktop browsers.
 
-- 默认不依赖数据库
-- 默认不依赖登录
-- 默认直接把本地文件系统作为真源
-- 只有在你主动公网暴露时，才建议启用 Clerk 鉴权
+## Highlights
 
-## 功能概览
+- Reads image folders directly from the local filesystem
+- Supports both home-page grouping and artist-based browsing
+- Optimized long-scroll gallery detail pages for mobile and desktop
+- Moves deleted galleries to Trash instead of hard-deleting them
+- Uses `sharp` for image compression and disk-cached covers
+- Works without auth by default for local use
+- Can optionally enable Clerk and invite-based access for public deployments
 
-- 首页按每 `10` 套图集分组，避免无限滚动
-- 支持按画师目录浏览
-- 图集详情页支持长图连续阅读
-- 封面图通过 `sharp` 压缩，并支持本地磁盘缓存
-- 详情页图片使用懒加载，减少首屏请求压力
-- 分组页支持删除图集，删除动作会把目录移动到 Trash，而不是硬删除
-- Clerk 为可选项；未配置时默认本地无鉴权
-- 可选配合自己的 Cloudflare Tunnel 做公网访问
-
-## 运行要求
+## Requirements
 
 - Node.js `20+`
-- 一个位于本机磁盘上的图库目录
 - `npm`
+- A local gallery root directory that contains your image folders
 
-可选依赖：
+## Quick Start
 
-- Clerk：如果你要公网暴露并加登录
-- `cloudflared`：如果你要通过 Cloudflare Tunnel 暴露公网
-
-## 快速开始
-
-1. 安装依赖
+1. Install dependencies.
 
 ```bash
 npm install
 ```
 
-2. 复制环境变量文件
-
-```bash
-cp .env.example .env.local
-```
-
-3. 修改 `.env.local`，至少配置：
+2. Create `.env.local`.
 
 ```env
 GALLERY_SOURCE_DIR=/absolute/path/to/your/gallery-root
 ```
 
-4. 启动开发环境
+3. Start the development server.
 
 ```bash
 npm run dev -- --hostname 0.0.0.0 --port 4317
 ```
 
-5. 打开浏览器访问：
+4. Open the app.
 
 ```text
 http://localhost:4317
 ```
 
-如果你只是本地自用，到这里就够了。
+### Production start
 
-## 图库目录结构
+```bash
+npm run build
+npm run start -- --hostname 0.0.0.0 --port 4317
+```
 
-当前支持两种结构。
+### Optional public access with Cloudflare Tunnel
 
-### 1. 推荐：按画师分层
+If you already have your own named Cloudflare Tunnel and `cloudflared` installed:
 
-这是最完整的结构，首页分组浏览和画师页都会工作得更自然。
+```bash
+TUNNEL_NAME=your-tunnel-name npm run serve:public
+```
+
+If your tunnel name is `gallery`, you can also run:
+
+```bash
+npm run serve:public
+```
+
+### Optional auth and invite flow
+
+Local mode works without auth. If you want sign-in protection and invite management, configure Clerk plus the admin and invite secrets below:
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
+CLERK_SECRET_KEY=sk_test_replace_me
+ADMIN_USER_ID=user_xxx
+INVITE_COOKIE_SECRET=replace-with-a-random-secret
+```
+
+Clerk is enabled only when both Clerk keys are present.
+
+## Gallery Layout
+
+Two folder layouts are supported.
+
+### Recommended: artist folders
 
 ```text
 gallery-root/
@@ -84,9 +97,207 @@ gallery-root/
     └── set-003/
 ```
 
-### 2. 兼容：单画师平铺
+### Also supported: a single flat artist root
 
-如果你的根目录本身就是某一个画师目录，也可以直接这样使用：
+```text
+gallery-root/
+├── set-001/
+│   ├── 001.jpg
+│   └── 002.jpg
+└── set-002/
+```
+
+Notes:
+
+- One gallery equals one folder
+- Images are sorted with numeric-aware filename ordering
+- Non-image files are ignored
+- Supported extensions: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`
+
+## Environment Variables
+
+### Required
+
+```env
+GALLERY_SOURCE_DIR=/absolute/path/to/your/gallery-root
+```
+
+### Common optional settings
+
+```env
+GALLERY_TRASH_DIR=/absolute/path/to/trash-dir
+GALLERY_CACHE_TTL_MS=300000
+GALLERY_MEDIA_CACHE_DIR=/absolute/path/to/media-cache
+ALLOWED_DEV_ORIGIN=http://192.168.x.x:4317
+ICON_SOURCE_PATH=/absolute/path/to/square-icon.png
+```
+
+What they do:
+
+- `GALLERY_TRASH_DIR`: custom Trash target for gallery deletion
+- `GALLERY_CACHE_TTL_MS`: gallery metadata cache TTL in milliseconds
+- `GALLERY_MEDIA_CACHE_DIR`: disk cache directory for generated cover images
+- `ALLOWED_DEV_ORIGIN`: extra dev origin for phone or LAN access in development
+- `ICON_SOURCE_PATH`: source image used by the icon generation script
+
+## Deletion Behavior
+
+Gallery deletion is not a hard delete.
+
+- The gallery folder is moved to Trash
+- The default Trash target is macOS `~/.Trash`
+- Set `GALLERY_TRASH_DIR` explicitly if you want a different location or a non-macOS setup
+
+The app also invalidates gallery metadata across Next.js workers after deletion, so artist and group pages do not need to wait for the cache TTL to expire.
+
+## Caching
+
+There are two main cache layers:
+
+1. Gallery metadata cache
+   Uses in-memory cache with a configurable TTL, plus a cross-process invalidation token for deletion consistency.
+2. Cover image disk cache
+   Stores generated cover outputs on disk and rebuilds them automatically when the source image changes.
+
+To manually clear the default media cache:
+
+```bash
+rm -rf .next/cache/gallery-media
+```
+
+## Icon Generation
+
+Regenerate the default icon assets:
+
+```bash
+ICON_SOURCE_PATH=/absolute/path/to/square-icon.png node scripts/generate-icon-assets.mjs
+```
+
+Generate a local private icon override:
+
+```bash
+ICON_SOURCE_PATH=/absolute/path/to/personal-icon.png ICON_OUTPUT_DIR=public/local-icons node scripts/generate-icon-assets.mjs
+```
+
+`public/local-icons/` is ignored by Git and is intended for local-only overrides.
+
+## Tests
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Recommended before publishing:
+
+```bash
+npm test
+npm run build
+```
+
+---
+
+## 简体中文
+
+[Back to English](#open-gallery)
+
+`open-gallery` 是一个本地优先的图片图集 Web 应用，直接读取你磁盘上的图片目录，把它们整理成适合手机和桌面浏览器使用的封面流与长图阅读体验。
+
+## 功能特点
+
+- 直接读取本地文件系统中的图片目录
+- 同时支持首页分组浏览和按画师浏览
+- 图集详情页适合手机和桌面的连续长图阅读
+- 删除图集时移动到 Trash，而不是硬删除
+- 使用 `sharp` 压缩图片，并为封面提供磁盘缓存
+- 默认本地模式无需登录
+- 需要公网访问时，可选启用 Clerk 和邀请码流程
+
+## 运行要求
+
+- Node.js `20+`
+- `npm`
+- 一个本地图库根目录
+
+## Quick Start Guide
+
+1. 安装依赖。
+
+```bash
+npm install
+```
+
+2. 创建 `.env.local`。
+
+```env
+GALLERY_SOURCE_DIR=/absolute/path/to/your/gallery-root
+```
+
+3. 启动开发环境。
+
+```bash
+npm run dev -- --hostname 0.0.0.0 --port 4317
+```
+
+4. 打开应用。
+
+```text
+http://localhost:4317
+```
+
+### 生产环境启动
+
+```bash
+npm run build
+npm run start -- --hostname 0.0.0.0 --port 4317
+```
+
+### 可选：通过 Cloudflare Tunnel 对外访问
+
+如果你已经有自己的 named tunnel，并且装好了 `cloudflared`：
+
+```bash
+TUNNEL_NAME=your-tunnel-name npm run serve:public
+```
+
+如果 tunnel 名称就是 `gallery`，也可以直接运行：
+
+```bash
+npm run serve:public
+```
+
+### 可选：启用鉴权和邀请码流程
+
+本地模式默认不需要登录。如果你要启用登录保护和邀请码管理，请配置 Clerk 以及下面这些环境变量：
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
+CLERK_SECRET_KEY=sk_test_replace_me
+ADMIN_USER_ID=user_xxx
+INVITE_COOKIE_SECRET=replace-with-a-random-secret
+```
+
+只有同时配置了两条 Clerk key，Clerk 才会启用。
+
+## 图库目录结构
+
+支持两种目录结构。
+
+### 推荐：按画师分层
+
+```text
+gallery-root/
+├── artist-a/
+│   ├── set-001/
+│   │   ├── 001.jpg
+│   │   └── 002.jpg
+│   └── set-002/
+└── artist-b/
+    └── set-003/
+```
+
+### 也支持：单画师平铺根目录
 
 ```text
 gallery-root/
@@ -98,10 +309,10 @@ gallery-root/
 
 说明：
 
-- 一个“图集”就是一个目录
-- 图集内的图片会按文件名自然排序
+- 一个图集就是一个文件夹
+- 图片会按带数字感知的文件名顺序排序
 - 非图片文件会被忽略
-- 支持的图片扩展名：`.jpg`、`.jpeg`、`.png`、`.webp`、`.gif`、`.avif`
+- 支持扩展名：`.jpg`、`.jpeg`、`.png`、`.webp`、`.gif`、`.avif`
 
 ## 环境变量
 
@@ -114,118 +325,49 @@ GALLERY_SOURCE_DIR=/absolute/path/to/your/gallery-root
 ### 常用可选项
 
 ```env
-ALLOWED_DEV_ORIGIN=http://192.168.x.x:4317
 GALLERY_TRASH_DIR=/absolute/path/to/trash-dir
 GALLERY_CACHE_TTL_MS=300000
 GALLERY_MEDIA_CACHE_DIR=/absolute/path/to/media-cache
+ALLOWED_DEV_ORIGIN=http://192.168.x.x:4317
 ICON_SOURCE_PATH=/absolute/path/to/square-icon.png
 ```
 
-说明：
+含义：
 
-- `ALLOWED_DEV_ORIGIN`
-  用于手机或局域网设备访问开发环境时，补充允许的 dev origin
-- `GALLERY_TRASH_DIR`
-  删除图集时的目标目录；未配置时默认使用 macOS 的 `~/.Trash`
-- `GALLERY_CACHE_TTL_MS`
-  图库列表内存缓存 TTL，默认 `300000` 毫秒
-- `GALLERY_MEDIA_CACHE_DIR`
-  封面磁盘缓存目录；未配置时默认使用 `.next/cache/gallery-media`
-- `ICON_SOURCE_PATH`
-  用于重新生成项目图标
-
-### 可选：启用 Clerk 鉴权
-
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
-CLERK_SECRET_KEY=sk_test_replace_me
-```
-
-只有当这两个变量都存在时，Clerk 才会启用。未配置时，应用默认为本地无鉴权模式。
-
-## 本地部署
-
-如果你不是开发，而是想在本机长期使用，可以直接跑 production build：
-
-```bash
-npm run build
-npm run start -- --hostname 0.0.0.0 --port 4317
-```
-
-然后访问：
-
-```text
-http://localhost:4317
-```
-
-这已经是可用的本地部署方式，不需要 Cloudflare，也不需要 Clerk。
-
-## 公网暴露（可选）
-
-如果你确实要从公网访问，再考虑这一步。
-
-先自行准备好：
-
-- 一个可用的 Cloudflare named tunnel
-- `cloudflared`
-- 建议同时配置 Clerk
-
-启动命令：
-
-```bash
-TUNNEL_NAME=your-tunnel-name npm run serve:public
-```
-
-如果你的 tunnel 名称就是 `gallery`，也可以直接：
-
-```bash
-npm run serve:public
-```
-
-这个脚本会：
-
-1. 执行 `npm run build`
-2. 在本地启动 Next.js production server
-3. 执行 `cloudflared tunnel run $TUNNEL_NAME`
-
-注意：
-
-- Cloudflare Tunnel 只是可选 helper，不是本项目运行前提
-- 如果你要公网暴露，建议先启用 Clerk
+- `GALLERY_TRASH_DIR`：删除图集时使用的 Trash 目录
+- `GALLERY_CACHE_TTL_MS`：图集元数据缓存 TTL，单位毫秒
+- `GALLERY_MEDIA_CACHE_DIR`：封面图磁盘缓存目录
+- `ALLOWED_DEV_ORIGIN`：开发环境下给手机或局域网访问增加允许来源
+- `ICON_SOURCE_PATH`：图标生成脚本使用的源图片
 
 ## 删除语义
 
-分组页里的删除不是硬删除。
+图集删除不是硬删除。
 
-- 当前实现会把图集目录移动到 Trash
-- 默认目标是 macOS 的 `~/.Trash`
-- 如果你不是 macOS，建议显式设置 `GALLERY_TRASH_DIR`
+- 图集目录会被移动到 Trash
+- 默认 Trash 目录是 macOS 的 `~/.Trash`
+- 如果你用的是其他环境，建议显式设置 `GALLERY_TRASH_DIR`
 
-这意味着：
-
-- 本地误删时更容易恢复
-- 但跨平台行为目前仍以 macOS 语义为默认假设
+删除后应用还会在 Next.js 多 worker 之间同步失效 gallery 元数据缓存，所以 artist 页和 group 页不需要再等到缓存 TTL 自然过期。
 
 ## 缓存行为
 
-当前有两类缓存：
+主要有两层缓存：
 
-1. 图库列表缓存
-   基于内存，默认 TTL 是 `5` 分钟；重启进程后会清空
-2. 封面磁盘缓存
-   默认写到 `.next/cache/gallery-media`；如果源图更新，会自动失效并重建
+1. 图集元数据缓存
+   使用可配置 TTL 的内存缓存，并带有跨进程失效 token 来保证删除后一致性。
+2. 封面图磁盘缓存
+   生成后的封面会落盘缓存，源图变化后会自动重建。
 
-如果你要手动清理封面缓存：
+手动清理默认媒体缓存：
 
 ```bash
 rm -rf .next/cache/gallery-media
 ```
 
-如果你自定义了 `GALLERY_MEDIA_CACHE_DIR`，就删除你自定义的目录。
-
 ## 图标生成
 
-重新生成仓库默认图标：
+重新生成默认图标资源：
 
 ```bash
 ICON_SOURCE_PATH=/absolute/path/to/square-icon.png node scripts/generate-icon-assets.mjs
@@ -237,10 +379,7 @@ ICON_SOURCE_PATH=/absolute/path/to/square-icon.png node scripts/generate-icon-as
 ICON_SOURCE_PATH=/absolute/path/to/personal-icon.png ICON_OUTPUT_DIR=public/local-icons node scripts/generate-icon-assets.mjs
 ```
 
-说明：
-
-- `public/local-icons/` 已被 `.gitignore` 忽略
-- 它适合放你自己的本地私有图标，不会进入版本控制
+`public/local-icons/` 已被 Git 忽略，适合放本地私有图标覆盖。
 
 ## 测试
 
@@ -250,37 +389,9 @@ ICON_SOURCE_PATH=/absolute/path/to/personal-icon.png ICON_OUTPUT_DIR=public/loca
 npm test
 ```
 
-本地发布前，建议至少执行：
+发布前建议至少执行：
 
 ```bash
 npm test
 npm run build
 ```
-
-## 开源使用注意事项
-
-当前仓库已经适合开源使用，但有几个边界需要明确：
-
-- 默认使用本地文件系统，不提供云存储同步能力
-- 删除流程默认按 macOS Trash 设计；非 macOS 环境建议配置 `GALLERY_TRASH_DIR`
-- 公网暴露不是默认路径，只有你明确需要时才建议启用
-- Clerk 完全可选，本地使用不需要任何第三方鉴权服务
-- 封面磁盘缓存默认写入 `.next/cache/gallery-media`，属于可重建缓存，不应提交
-
-## 常见问题
-
-### 1. 没配置 `GALLERY_SOURCE_DIR` 能启动吗？
-
-能。应用会显示空库，而不是直接崩掉。
-
-### 2. 为什么手机访问开发环境失败？
-
-通常需要把 `ALLOWED_DEV_ORIGIN` 配成你手机实际访问的地址，例如：
-
-```env
-ALLOWED_DEV_ORIGIN=http://192.168.1.10:4317
-```
-
-### 3. 不想开放公网，是否还需要 Clerk？
-
-不需要。只要你本地使用，完全可以不配 Clerk。
