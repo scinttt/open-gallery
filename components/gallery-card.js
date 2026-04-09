@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RetryImage from "@/components/retry-image";
 
 export function GalleryCard({
   gallery,
@@ -10,7 +11,7 @@ export function GalleryCard({
   const cardBody = (
     <>
       <div className="cover-frame">
-        <img
+        <RetryImage
           alt={gallery.title}
           loading="lazy"
           src={`/api/media/${gallery.slug}/${gallery.coverIndex}?mode=cover&w=560&q=70`}

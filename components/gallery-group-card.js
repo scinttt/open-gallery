@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RetryImage from "@/components/retry-image";
 
 export function GalleryGroupCard({ group, hrefPrefix = "/groups" }) {
   return (
@@ -7,7 +8,7 @@ export function GalleryGroupCard({ group, hrefPrefix = "/groups" }) {
         <div className="cover-frame group-cover-frame">
           <div className="group-cover-grid">
             {group.galleries.map((gallery) => (
-              <img
+              <RetryImage
                 alt={gallery.title}
                 className="group-cover-tile"
                 key={gallery.slug}

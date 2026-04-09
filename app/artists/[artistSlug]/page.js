@@ -1,7 +1,7 @@
 import Link from "next/link";
 import AuthUserButton from "@/components/auth-user-button";
-import { GalleryGroupCard } from "@/components/gallery-group-card";
 import GalleryGroupManager from "@/components/gallery-group-manager";
+import ProgressiveGroupGrid from "@/components/progressive-group-grid";
 import TopNavigationTabs from "@/components/top-navigation-tabs";
 import { getArtistBySlug } from "@/lib/gallery";
 
@@ -54,15 +54,10 @@ export default async function ArtistDetailPage({ params }) {
                 <h2>Every 10 sets in one block</h2>
               </div>
             </header>
-            <section className="gallery-grid" aria-label={`${artist.title} groups`}>
-              {artist.groups.map((group) => (
-                <GalleryGroupCard
-                  group={group}
-                  hrefPrefix={`/artists/${artistSlug}`}
-                  key={group.slug}
-                />
-              ))}
-            </section>
+            <ProgressiveGroupGrid
+              groups={artist.groups}
+              hrefPrefix={`/artists/${artistSlug}`}
+            />
           </>
         ) : (
           <GalleryGroupManager

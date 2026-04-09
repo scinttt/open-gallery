@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import AuthUserButton from "@/components/auth-user-button";
-import { GalleryGroupCard } from "@/components/gallery-group-card";
+import ProgressiveGroupGrid from "@/components/progressive-group-grid";
 import TopNavigationTabs from "@/components/top-navigation-tabs";
 import { CLERK_ENABLED } from "@/lib/auth-config";
 import { getGalleryGroups } from "@/lib/gallery";
@@ -45,11 +45,7 @@ export default async function HomePage() {
         </p>
       </header>
 
-      <section className="gallery-grid" aria-label="Gallery group grid">
-        {groups.map((group) => (
-          <GalleryGroupCard group={group} key={group.slug} />
-        ))}
-      </section>
+      <ProgressiveGroupGrid groups={groups} />
     </main>
   );
 }

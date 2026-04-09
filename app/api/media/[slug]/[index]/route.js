@@ -1,9 +1,9 @@
 import { readFile, stat } from "node:fs/promises";
 import { auth } from "@clerk/nextjs/server";
-import sharp from "sharp";
 import { CLERK_ENABLED } from "@/lib/auth-config";
 import { getGalleryImageByIndex } from "@/lib/gallery";
 import { buildCacheKey, getCachedMedia, setCachedMedia } from "@/lib/media-cache";
+import { sharpTransform } from "@/lib/sharp-pool";
 
 export const dynamic = "force-dynamic";
 
@@ -52,31 +52,27 @@ export async function GET(request, { params }) {
       });
     }
 
-    const transformed = await sharp(image.absolutePath)
-      .rotate()
-      .resize({
-        width,
-        fit: "cover",
-        withoutEnlargement: true,
-      })
-      .jpeg({
-        quality,
-        mozjpeg: true,
-        progressive: true,
-      })
-      .toBuffer();
+    try {
+      const transformed = await sharpTransform(image.absolutePath, {
+        resize: { width, fit: "cover", withoutEnlargement: true },
+        jpeg: { quality, mozjpeg: true, progressive: true },
+      });
 
-    setCachedMedia(cacheKey, transformed).catch((err) => {
-      console.error("[media-cache] Failed to write cover cache:", err);
-    });
+      setCachedMedia(cacheKey, transformed).catch((err) => {
+        console.error("[media-cache] Failed to write cover cache:", err);
+      });
 
-    return new Response(transformed, {
-      headers: {
-        "Content-Length": String(transformed.byteLength),
-        "Content-Type": "image/jpeg",
-        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
-      },
-    });
+      return new Response(transformed, {
+        headers: {
+          "Content-Length": String(transformed.byteLength),
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        },
+      });
+    } catch (err) {
+      console.error(`[media] sharp cover failed for ${slug}/${index}:`, err.message);
+      return new Response("Image processing failed", { status: 502 });
+    }
   }
 
   const fileStat = await stat(image.absolutePath);
@@ -93,25 +89,21 @@ export async function GET(request, { params }) {
     });
   }
 
-  const transformed = await sharp(image.absolutePath)
-    .rotate()
-    .resize({
-      width,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .jpeg({
-      quality,
-      mozjpeg: true,
-      progressive: true,
-    })
-    .toBuffer();
+  try {
+    const transformed = await sharpTransform(image.absolutePath, {
+      resize: { width, fit: "inside", withoutEnlargement: true },
+      jpeg: { quality, mozjpeg: true, progressive: true },
+    });
 
-  return new Response(transformed, {
-    headers: {
-      "Content-Length": String(transformed.byteLength),
-      "Content-Type": "image/jpeg",
-      "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
-    },
-  });
+    return new Response(transformed, {
+      headers: {
+        "Content-Length": String(transformed.byteLength),
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
+  } catch (err) {
+    console.error(`[media] sharp detail failed for ${slug}/${index}:`, err.message);
+    return new Response("Image processing failed", { status: 502 });
+  }
 }

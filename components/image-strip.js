@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RetryImage from "@/components/retry-image";
 
-const INITIAL_BATCH = 5;
-const BATCH_SIZE = 10;
+const INITIAL_BATCH = 3;
+const BATCH_SIZE = 6;
 
 export default function ImageStrip({ gallery }) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
@@ -42,9 +43,9 @@ export default function ImageStrip({ gallery }) {
     >
       {visibleImages.map((image, index) => (
         <figure className="image-section" key={image.id}>
-          <img
+          <RetryImage
             alt={`${gallery.title} ${index + 1}`}
-            loading={index < 3 ? "eager" : "lazy"}
+            loading={index < 2 ? "eager" : "lazy"}
             src={`/api/media/${gallery.slug}/${image.index}?mode=detail&w=1440&q=82`}
           />
         </figure>
