@@ -797,6 +797,23 @@ img {
   height: auto;
 }
 
+.scroll-page-indicator {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm, 8px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
 .image-placeholder {
   aspect-ratio: 0.74;
   background:
